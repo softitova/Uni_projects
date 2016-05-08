@@ -1,0 +1,192 @@
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <cstdio>
+#include <algorithm>
+#include <string>
+#include <cstdlib>
+#include <fstream>
+#include <ctime>
+#include <iostream>
+#include <vector>
+
+#pragma comment (linker, "/STACK:66777216")
+
+using namespace std;
+vector <long long> mass;
+long long res;
+
+struct item {
+	long long size, prior, length;
+	item *l, *r;
+	item() { }
+	item(long long size, long long prior, long long length) : size(size), prior(prior), length(length), l(NULL), r(NULL) { }
+};
+
+typedef item * pitem;
+
+//const int inf = 1e9 + 500;
+
+
+
+long long size(pitem t)
+
+{
+	return t ? t->size : 0;
+}
+
+void split(pitem t, int x, pitem &l, pitem &r)
+{
+	if (!t)
+	{
+		l = r = NULL;
+	}
+	else
+	{
+		if (x > size(t->l) + 1)
+		{
+			split(t->r, x - size(t->l) - 1, t->r, r), l = t;
+		}
+		else
+		{
+			split(t->l, x, l, t->l), r = t;
+		}
+		t->size = size(t->l) + size(t->r) + 1;
+	}
+}
+
+
+void merge(pitem & t, pitem l, pitem r) {
+	if (!l || !r)
+		t = l ? l : r;
+	else if (l->prior > r->prior)
+		merge(l->r, l->r, r), t = l;
+	else
+		merge(r->l, l, r->l), t = r;
+	t->size = size(t->l) + size(t->r) + 1;
+
+}
+
+
+
+void insert(pitem &t, pitem it, long long i) { //  ?????? ? ??????? ??? ??????????
+	pitem l = NULL, r = NULL, tt = NULL;
+	//res = res + (it->length)*(it->length);  //  ???? ????? ? ?????? ???????
+	split(t, i, l, r);
+	merge(tt, l, it);
+	merge(t, tt, r);
+	//res = res + (it->length)*(it->length);
+}
+
+void erase(pitem &t, long long place)
+{
+	pitem t2, t3, l, r;
+	split(t, place, l, r);
+	split(r, place + 1 - size(l), t2, t3);
+	merge(t, l, t3);
+}
+
+
+
+
+long long search(pitem t, long long place, long long comand, long long add)
+{
+	if (place == size(t->l) + 1)
+	{
+		long long k = t->length;
+		if (comand == 1)
+		{
+			k = t->length / 2;
+			t->length = t->length / 2;
+		}
+		else if (comand == 2)
+		{
+			k = t->length + add;
+			t->length += add;
+		}
+		return k;
+	}
+	if (place <= size(t->l))
+	{
+		return search(t->l, place, comand, add);
+	}
+	return search(t->r, place - size(t->l) - 1, comand, add);
+}
+
+
+
+int main()
+{
+	freopen("river.in", "r", stdin);
+	freopen("river.out", "w", stdout);
+
+	long long n, m, x, y;
+	pitem t = NULL;
+	srand(2);
+	long long pasha;
+	cin >> n >> pasha;
+	mass.resize(n + 1);
+	for (long long i = 1; i <= n; i++)
+	{
+		cin >> mass[i];
+		int prior = (1 + rand()) % 100000050;
+		pitem itt = new item(1, prior, mass[i]);
+		insert(t, itt, i);
+		res += mass[i] * mass[i];
+	}
+	cin >> m;
+	long long numb, numb2, numb3, numb4, numb5, numb6;
+	cout << res << "\n";
+	for (long long i = 1; i <= m; i++)
+	{
+		cin >> x >> y;
+		if (x == 1)
+		{
+			numb = search(t, y, 0, 0);
+			res -= numb*numb;
+
+
+			if (y == 1)
+			{
+				numb2 = search(t, y + 1, 0, 0);
+				res -= numb2*numb2;
+				numb3 = search(t, y + 1, 2, numb);
+				res += numb3*numb3;
+			}
+			else if (y == size(t))
+			{
+				numb2 = search(t, y - 1, 0, 0);
+				res -= numb2*numb2;
+				numb3 = search(t, y - 1, 2, numb);
+				res += numb3*numb3;
+			}
+			else
+			{
+				numb2 = search(t, y + 1, 0, 0);
+				numb3 = search(t, y - 1, 0, 0);
+				numb4 = search(t, y - 1, 2, numb / 2);
+				numb5 = search(t, y + 1, 2, numb - numb / 2);
+				res = res - numb2*numb2 - numb3*numb3 + numb4*numb4 + numb5*numb5;
+
+			}
+			erase(t, y);
+		}
+		else
+		{
+			numb = search(t, y, 0, 0);
+			res -= numb*numb;
+			long long prior = (1 + rand()) % 100000050;
+			pitem itt = new item(1, prior, numb - numb / 2);
+			numb2 = search(t, y, 1, 0);
+			res = res + numb2*numb2 + (numb - numb / 2)*(numb - numb / 2);
+			insert(t, itt, y + 1);
+
+		}
+
+		cout << res << "\n";
+
+	}
+
+	return 0;
+
+
+}
