@@ -1,0 +1,272 @@
+function isNumeric(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+function Operator( symbol, f, differ, simple) {
+
+    var input = [];
+    var ops = function() {
+        this.input = arguments;
+    }
+    ops.prototype.evaluate = function(x, y, z) {
+         var temp = f (this.input[0].evaluate(x, y, z), this.input[1] && this.input[1].evaluate(x, y, z));
+         for ( i = 2; i<this.input.length; i++) {
+             temp = f(temp, this.input[i].evaluate(x, y, z));
+         }
+         return temp;
+    }
+    ops.prototype.diff = function(name) {
+        return temp = differ(name, this.input[0], this.input[1]);
+    }
+    ops.prototype.simplify = function () {
+        if ( this.input[1] != undefined && isNumeric(this.input[0].simplify()) && isNumeric(this.input[1].simplify()) ) {
+               var l = Number(this.input[0].simplify().toString());
+               var r = Number(this.input[1].simplify().toString());
+               return new Const(f(l, r));
+        } else {
+           return simple(this.input[0].simplify(), this.input[1] && this.input[1].simplify());
+        }
+    }
+    ops.prototype.toString = function() {
+        var temp = this.input[0];
+        for ( i = 1; i < this.input.length; i++) {
+         temp += this.input[i] && (" " + this.input[i]);
+        }
+        temp += " " + symbol;
+        return temp + "";
+    }
+    ops.prototype.prefix = function () {
+         var temp = "(" + symbol + " " + this.input[0].prefix ();
+         for ( i = 1; i<this.input.length; i++) {
+             temp += this.input[i] && (" " + this.input[i].prefix ());
+         }
+         temp += ")";
+         return temp;
+    }
+    return ops;
+}
+
+var addDif = function(name, left, right){
+    return new Add(left.diff(name), right.diff(name));
+};
+var subDif = function(name, left, right){
+    return new Subtract(left.diff(name), right.diff(name));
+};
+
+var mulDiff = function(x, left, right) {
+    return new Add(
+    new Multiply(left.diff(x), right),
+    new Multiply(left, right.diff(x))
+    );
+}
+
+var divDiff = function(x, left, right) {
+    return new Divide(
+        new Subtract(
+            new Multiply(left.diff(x), right),
+            new Multiply(left, right.diff(x))
+        ),
+        new Multiply(right, right)
+    );
+}
+
+var sinDiff = function(x,left, right) {
+    return new Multiply(left.diff(x), new Cos(left));
+}
+
+var negDiff = function(x, left, right) {
+    return new Negate(left.diff(x));
+}
+
+var cosDiff = function(x, left, right) {
+    return new Multiply(left.diff(x), new Negate(new Sin(left)));
+}
+
+var variantsVariables = [ "x", "y", "z"];
+
+var getVar = function(name) {
+     return variantsVariables.indexOf(name);
+}
+var addSimple = function(left, right) {
+    if (left.toString() == 0) {
+      return right;
+    }
+    if (right.toString() == 0) {
+      return left;
+    }
+    return new Add(left, right);
+}
+
+var subSimple = function(left, right) {
+   if (left.toString() == 0 && right.toString() == 0) {
+       return new Const(0);
+   }
+   if (left.toString() == 0) {
+       if(isNumeric(right.toString())) {
+            return new Const(-right.toString());
+       }
+       return new Negate(right);
+   }
+       if (right.toString() == 0) {
+       return left;
+   }
+   return new Subtract(left, right);
+}
+
+var mulSimple = function(left, right) {
+    if (left.toString() == 0 || right.toString() == 0) {
+          return new Const(0);
+    }
+    if (left.toString() == 1) {
+       return right;
+    }
+    if (right.toString() == 1) {
+       return left;
+    }
+    return new Multiply(left, right);
+}
+
+var divSimple = function(left, right) {
+     if (left.toString() == 0 && right.toString() != 0) {
+         return new Const(0);
+     }
+     if (right.toString() == 1) {
+         return left;
+     }
+
+     return new Divide(left, right);
+}
+var negSimple = function(left) {
+    if (left.toString() == 0) {
+        return new Const(0);
+    }
+    if(isNumeric(left.toString())) {
+        return new Const(-left.toString());
+    }
+    return new Negate(left);
+}
+
+var stub = function(a){
+    return a;
+};
+
+var cosSimple = function(a){
+    return new Cos(a);
+};
+var sinSimple = function(a){
+    return new Sin(a);
+};
+
+var expDiff = function(name, left) {
+    return Multiply(left.diff(name),new Exp(left));
+}
+
+var atanDiff = function(name, left) {
+    return new Multiply(left.diff(name), new Divide(new Const(1), new Add(new Multiply(left, left),new Const(1))));
+}
+
+
+var Add = Operator("+", function(a,b) { return a + b;}, addDif, addSimple);
+var Subtract = Operator("-", function(a,b) { return a - b;}, subDif, subSimple);
+var Multiply = Operator( "*", function(a,b) { return a * b;}, mulDiff, mulSimple);
+var Divide = Operator( "/", function(a,b) { return a / b;}, divDiff, divSimple);
+var Negate = Operator( "negate", function(a) {return -a;},negDiff, negSimple);
+var Sin = Operator( "sin", function(a) {return Math.sin(a);}, sinDiff, sinSimple);
+var Cos = Operator( "cos", function(a) {return Math.cos(a);}, cosDiff, cosSimple);
+var Exp = Operator( "exp", Math.exp, expDiff, stub);
+var ArcTan = Operator ( "atan", Math.atan, atanDiff, stub);
+
+var mapOfVariables = {
+    "x" : null,
+    "y" : null,
+    "z" : null,
+}
+
+var figure = function (first) {
+    this.first = first;
+}
+figure.prototype.evaluate = function () {
+    var index = getVar(this.first);
+    return index == -1 ? Number(this.first) : arguments[index];
+}
+
+figure.prototype.toString = function () {
+    return this.first+ "";
+}
+
+figure.prototype.prefix = function() {
+    return this.first.toString();
+}
+
+figure.prototype.simplify = function() {
+    return this;
+}
+
+figure.prototype.diff = function(x) {
+    return getVar(this.first) == -1
+               ? new Const(0)
+               : this.first == x
+                    ? new Const (1)
+                    : new Const (0);
+}
+
+var Const = figure;
+var Variable = figure;
+
+
+
+var mapOfConversions = {
+    "x" : 0,
+    "y" : 1,
+    "z" : 2
+}
+
+
+var mapOfVariables = {
+    "x" : null,
+    "y" : null,
+    "z" : null,
+}
+
+var mapOfUnaryOperators = {
+    "negate" : Negate,
+    "sin"    : Sin,
+    "cos"    : Cos,
+}
+
+
+
+//var pIsNumber = /\d+/;
+var mapOfBinaryOperators = {
+    "+"  : Add,
+    "-"  : Subtract,
+    "*"  : Multiply,
+    "/"  : Divide,
+}
+function parse(expr) {
+
+ expr = expr.split(" ");
+ var stack = [];
+
+    for (var i = 0; i < expr.length; i++) {
+        var current = expr[i];
+        if (current === "") {
+        } else if (current in mapOfVariables) {
+            stack.push(new Variable(current));
+        } else if (current in mapOfUnaryOperators) {
+            var a = stack.pop();
+            stack.push(new mapOfUnaryOperators[current](a));
+        } else if (current in mapOfBinaryOperators) {
+            var b = stack.pop();
+            var a = stack.pop();
+            stack.push(new mapOfBinaryOperators[current](a, b));
+            } else {
+          stack.push(new Const(current));
+        }
+    }
+
+    return stack.pop();
+}
+
+
+
