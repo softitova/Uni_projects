@@ -1,0 +1,129 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <cstdio>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+struct rectangle
+{
+	int x1, y1, x2, y2;
+};
+vector <vector <rectangle> > T;
+int n, m;
+rectangle st[10][200][10][200];
+
+rectangle intersection(rectangle p1, rectangle p2)
+{
+	rectangle res;
+	if (p1.x1 > p2.x2 || p1.x2 < p2.x1 || p1.y1 > p2.y2 || p1.y2 < p2.y1)
+	{
+		res.x1 = res.x2 = res.y1 = res.y2 = 0;
+		return res;
+	}
+	res.x1 = max(p1.x1, p2.x1);
+	res.x2 = min(p1.x2, p2.x2);
+	res.y1 = max(p1.y1, p2.y1);
+	res.y2 = min(p1.y2, p2.y2);
+	return res;
+}
+
+long long area(rectangle r)
+{
+	return (long long)(r.x2 - r.x1) * (r.y2 - r.y1);
+}
+
+
+int main()
+{
+	freopen("pail.in", "rt", stdin);
+	freopen("pail.out", "wt", stdout);
+	scanf("%d%d", &n, &m);
+
+	T.resize(n);
+	for (int i = 0; i < n; i++)
+	{
+		T[i].resize(m);
+		for (int j = 0; j < m; j++)
+		{
+			int x1, x2, y1, y2;
+			//cin >> x1 >> y1 >> x2 >> y2;
+			scanf("%d%d%d%d", &x1, &y1, &x2, &y2);
+			T[i][j].x1 = min(x1, x2);
+			T[i][j].y1 = min(y1, y2);
+			T[i][j].x2 = max(x1, x2);
+			T[i][j].y2 = max(y1, y2);
+		}
+	}
+	vector <int> h;
+	h.push_back(0);
+	h.push_back(0);
+	for (int i = 2; i <= max(n, m); i++)
+	{
+		h.push_back(h[i / 2] + 1);
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < m; j++)
+		{
+			st[0][i][0][j] = T[i][j];
+		}
+		for (int k = 1; k <= h[m]; k++)
+		{
+			int two = 1 << k;
+			for (int j = 0; j + two - 1 < m; j++)
+			{
+				st[0][i][k][j] = intersection(st[0][i][k - 1][j], st[0][i][k - 1][j + two / 2]);
+			}
+		}
+	}
+
+	for (int k = 1; k <= h[n]; k++)
+	{
+		int two = 1 << k;
+		for (int i = 0; i + two - 1 < n; i++)
+		{
+			for (int j = 0; j < m; j++)
+			{
+				st[k][i][0][j] = intersection(st[k - 1][i][0][j], st[k - 1][i + two / 2][0][j]);
+			}
+			for (int k2 = 1; k2 <= h[m]; k2++)
+			{
+				int two2 = 1 << k2;
+				for (int j = 0; j + two2 - 1 < m; j++)
+				{
+					st[k][i][k2][j] = intersection(st[k][i][k2 - 1][j], st[k][i][k2 - 1][j + two2 / 2]);
+				}
+			}
+		}
+	}
+
+	int Q, A, B;
+	vector <int> v(1);
+	scanf("%d%d%d%d", &Q, &A, &B, &v[0]);
+	long long sum = 0;
+	for (int i = 1; i <= 4 * Q; i++)
+	{
+		long long dop = (long long)((long long)A * v.back() + (long long)B);
+		v.push_back(dop % 1000000007);
+		if (!(i % 4))
+		{
+			int ly = min(v[i - 3] % n, v[i - 1] % n);
+			int ry = max(v[i - 3] % n, v[i - 1] % n);
+			int lx = min(v[i - 2] % m, v[i] % m);
+			int rx = max(v[i - 2] % m, v[i] % m);
+			int ky = h[ry - ly + 1];
+			int stepy = 1 << ky;
+			int kx = h[rx - lx + 1];
+			int stepx = 1 << kx;
+			rectangle ans1 = intersection(st[ky][ly][kx][lx], st[ky][ly][kx][rx - stepx + 1]);
+			rectangle ans2 = intersection(st[ky][ry - stepy + 1][kx][lx], st[ky][ry - stepy + 1][kx][rx - stepx + 1]);
+			rectangle ans = intersection(ans1, ans2);
+			long long ar = area(ans);
+			sum = (sum + ar) % 1000000007;
+		}
+	}
+	printf("%I64d", sum);
+	return 0;
+}
