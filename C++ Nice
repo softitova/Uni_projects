@@ -1,0 +1,98 @@
+import java.io.*;
+import java.math.BigInteger;
+
+public class Q {
+    private static long count(int i, int j, int m) {
+
+        String first = Integer.toBinaryString(i);
+        String second = Integer.toBinaryString(j);
+        int[] arrFirst = new int[m];
+        int[] arrSecond = new int[m];
+
+
+        for (int k = 0; k < first.length(); k++) {
+            if (first.charAt(first.length() - 1 - k) == '1') {
+                arrFirst[m - 1 - k] = 1;
+            }
+        }
+        for (int k = 0; k < second.length(); k++) {
+            if (second.charAt(second.length() - 1 - k) == '1') {
+                arrSecond[m - 1 - k] = 1;
+            }
+        }
+
+        for (int k = 0; k < m - 1; k++) {
+            if (arrFirst[k] == 1 && arrFirst[k + 1] == 1 &&
+                    arrSecond[k] == 1 && arrSecond[k + 1] == 1 ||
+                    arrFirst[k] == 0 && arrFirst[k + 1] == 0 &&
+                            arrSecond[k] == 0 && arrSecond[k + 1] == 0) {
+                return 0L;
+            }
+        }
+        return 1L;
+    }
+
+    public static long[][] matrix(long arr[][], BigInteger n, int mask, int mod) {
+        long ans[][] = new long[mask][mask];
+        for( int i=0; i <mask; i ++){
+            for ( int j = 0; j < mask; j ++) {
+                ans[i][j] = 0;
+                if (i == j) {
+                    ans[i][j] = 1;
+                }
+            }
+        }
+        while(!n.equals(BigInteger.ZERO)) {
+            if (n.testBit(0)) {
+                ans = multiply(ans, arr, mask, mod);
+            }
+            arr=multiply(arr,arr,mask,mod);
+            n = n.shiftRight(1);
+        }
+        return ans;
+    }
+
+    public static long[][] multiply(long arr1[][], long arr2[][], int mask, int mod) {
+        long res[][] = new long[mask][mask];
+        for (int i = 0; i < mask; i++) {
+            for (int j = 0; j < mask; j++) {
+                res[i][j] = 0;
+                for (int k = 0; k < mask; k++) {
+                    res[i][j] += (arr1[i][k] * arr2[k][j]);
+                }
+                res[i][j] %= mod;
+            }
+        }
+        return res;
+    }
+
+    public static void main(String[] args) throws IOException {
+        BufferedReader in = new BufferedReader(new FileReader("nice3.in"));
+        PrintWriter out = new PrintWriter(new File("nice3.out"));
+        String s = in.readLine();
+        String[] numbers = s.split(" ");
+        BigInteger n = new BigInteger(numbers[0]);
+        int m = Integer.parseInt(numbers[1]);
+        int mod = Integer.parseInt(numbers[2]);
+        int mask = 1 << m;
+        long arr[][] = new long[mask][mask];
+        for (int i = 0; i < mask; i++) {
+            for (int j = 0; j < mask; j++) {
+                arr[i][j] = count(i, j, m);
+            }
+        }
+
+        long sum = 0;
+        long arrAns[][] = matrix(arr, n.subtract(BigInteger.ONE), mask, mod);
+        for (int i = 0; i < mask; i++) {
+            for (int j = 0; j < mask; j++) {
+                sum = sum + arrAns[i][j];
+            }
+        }
+
+        out.print(sum%mod );
+        out.close();
+
+
+    }
+}
