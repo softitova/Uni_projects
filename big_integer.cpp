@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 
 #include "big_integer.h"
+//#include "BIG__INTEGER.h"
 
 unsigned long long p = 1 << 30;
 const unsigned long long mod = p * 4;
@@ -17,29 +18,25 @@ void my_resize(big_integer &a) {
 
 big_integer::big_integer() : mass(1, 0), sign(0)
 {
-    this->mass.clear();
-    this->mass.push_back(0);
-    this->sign = 0;
 }
 
-big_integer::big_integer(big_integer const& new_big)
+big_integer::big_integer(big_integer const& new_big) : sign(new_big.sign)
 {
     this->mass = new_big.mass;
-    this->sign = new_big.sign;
-}
-big_integer::big_integer(unsigned int new_int) {
-    mass.resize(1);
-    mass[0] = new_int;
-    sign = 0;
-}
-big_integer::big_integer(unsigned long long new_int) {
-    mass.push_back(new_int % mod);
-    if (new_int> mod) {
-        mass.push_back(new_int / mod);
-    }
-    sign = 0;
 }
 
+big_integer::big_integer(unsigned int new_int) : mass(1, new_int), sign(0)
+{
+}
+
+big_integer::big_integer(unsigned long long new_int) :  sign(0)
+{
+    mass.push_back(new_int % mod);
+    if (new_int> mod)
+    {
+        mass.push_back(new_int / mod);
+    }
+}
 
 big_integer::big_integer(int new_int)
 {
@@ -48,31 +45,16 @@ big_integer::big_integer(int new_int)
     mass[0] = new_int;
 }
 
-/*big_integer::big_integer(std::string const& line)
+big_integer::big_integer(std::string const& line)
 {
     int start;
-    big_integer ten(10);
-    line[0] == '-' ? (start = 1, this->sign = 1) : (start = 0, this->sign = 0);
-    for (int i = start; i < (int) line.size(); i++)
+    big_integer TEN(10);
+    for (int i = (line[0] == '-') ? 1 : 0 ; i < (int) line.size(); i++)
     {
-        *this *= ten;
+        *this *= TEN;
         *this += line[i] - '0';
     }
-}*/
-big_integer::big_integer(std::string const& str)
-{
-    int i;
-    //cout << "str " << str << "\n";
-    big_integer ten(10);
-    str[0] == '-' ? i = 1 : i = 0;
-    for (; i < (int) str.size(); i++)
-    {
-        *this *= ten;
-        *this += str[i] - '0';
-    }
-
-    str[0] == '-' ? this->sign = 1 : this->sign = 0;
-    //big_integer f = *this;
+    this->sign = ( line[0] == '-' ) ? 1  :  0;
 }
 
 big_integer::~big_integer()
@@ -179,7 +161,6 @@ big_integer operator-(big_integer a, big_integer const& b) {
         int sizeBig = max((int) first.mass.size(), (int) second.mass.size());
         first.mass.resize(sizeBig);
         second.mass.resize(sizeBig);
-
         long long carry = 0;
         for (int i = 0; i < sizeBig; ++i)
         {
@@ -191,10 +172,6 @@ big_integer operator-(big_integer a, big_integer const& b) {
                 carry = 1;
             }
             result.mass.push_back(res2);
-        }
-        while ( result.mass.size()!=1 && !result.mass.back())
-        {
-            result.mass.pop_back();
         }
         if (result.mass.size() != 1 || result.mass[0] != 0)
         {
@@ -250,6 +227,10 @@ big_integer operator*(big_integer a, big_integer const& b)
 unsigned int binary (big_integer dop, big_integer second) {
     unsigned long long l = 0;
     unsigned long long r = mod;
+    if (second * big_integer(1) > dop)
+    {
+        return 0;
+    }
     while (l < r -1) {
         unsigned long long m = (l+r)/2;
         big_integer multy= second * m;
@@ -265,19 +246,18 @@ unsigned int binary (big_integer dop, big_integer second) {
     return l;
 }
 
-/*big_integer div_long_short (big_integer &first, int second) {
+big_integer div_long_short (big_integer &first, int second) {
     int carry = 0;
+
     for (int i=(int)first.mass.size()-1; i>=0; --i)
     {
         long long cur = first.mass[i] + carry * 1ll *  mod;
         first.mass[i] = int (cur / second);
         carry = int (cur % second);
     }
-    //while (a.size() > 1 && a.back() == 0)
-    //	a.pop_back();
     my_resize(first);
     return first;
-}*/
+}
 
 
 big_integer operator/(big_integer a, big_integer const& b) {
@@ -292,13 +272,15 @@ big_integer operator/(big_integer a, big_integer const& b) {
     dop.mass.clear();
     first.sign = second.sign = 0;
     result.sign= ((a.sign != b.sign) ? 1 : 0);
-   /* if ( second.mass.size()==1)
+    if ( second.mass.size()==1)
     {
+        int temp = result.sign;
         result = div_long_short(first, second.mass[0]);
-        reverse(result.mass.begin(), result.mass.end());
+        result.sign = temp;
         return result;
-    }*/
-    while (first.mass.size() != 0) {
+    }
+    while (first.mass.size() != 0)
+    {
         dop.mass.insert(dop.mass.begin(), first.mass.back());
         first.mass.pop_back();
         unsigned int l = binary(dop, second);
@@ -315,14 +297,15 @@ big_integer operator/(big_integer a, big_integer const& b) {
     reverse(result.mass.begin(), result.mass.end());
     my_resize(result);
     return result;
+
 }
 
 big_integer operator%(big_integer a, big_integer const& b) {
     big_integer result;
     result.mass.clear();
     result.sign = a.sign;
-    big_integer res = a/b;
-    result = (a - res*b);
+
+    result = (a - (a/b)*b);
     return result;
 }
 
@@ -493,7 +476,6 @@ big_integer operator<< (big_integer a , int b) {
             a.mass.push_back(last);
         }
     }
-
     int k = (int)a.mass.size();
     a.mass.resize(k + count);
     for (int i = 0; i < (int) count; i++)
@@ -508,9 +490,7 @@ big_integer operator<< (big_integer a , int b) {
         a.sign=0;
     }
         return a;
-
 }
-
 
 big_integer operator>> (big_integer a , int b) {
 
@@ -657,7 +637,3 @@ std::ostream& operator<<(std::ostream& s, big_integer const& a)
     s << to_string(a);
     return s;
 }
-
-
-
-
