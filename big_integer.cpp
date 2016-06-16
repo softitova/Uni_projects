@@ -440,7 +440,7 @@ big_integer& make_binary_op (big_integer &a, big_integer const &b, int operation
     }
     if (a.sign)
     {
-        a.mass.push_back(std::numeric_limits<long long>::max());
+        a.mass.push_back(std::numeric_limits<unsigned>::max());
         a = double_code(a + 1);
     }
     my_resize(a);
