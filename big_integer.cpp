@@ -1,9 +1,10 @@
-#include <bits/stdc++.h>
+//#include <bits/stdc++.h>
 #include "big_integer.h"
- 
+#include "iostream"
+using namespace std;
 unsigned long long p = 1 << 30;
 const unsigned long long mod = p * 4;
- 
+
 void my_resize(big_integer &a)
 {
     if(a.mass.empty())
@@ -13,13 +14,13 @@ void my_resize(big_integer &a)
     if(a.mass.size() == 1 && a.mass.back() == 0)
         a.sign = 0;
 }
- 
+
 big_integer::big_integer() : mass(1, 0), sign(0) {}
- 
+
 big_integer::big_integer(big_integer const& new_big) : mass(new_big.mass), sign(new_big.sign) {}
- 
+
 big_integer::big_integer(unsigned int new_int) : mass(1, new_int), sign(0) {}
- 
+
 big_integer::big_integer(unsigned long long new_int) :  sign(0)
 {
     mass.push_back(new_int % mod);
@@ -28,14 +29,14 @@ big_integer::big_integer(unsigned long long new_int) :  sign(0)
         mass.push_back(new_int / mod);
     }
 }
- 
+
 big_integer::big_integer(int new_int)
 {
     new_int < 0 ? (sign = 1, new_int = -new_int) : sign = 0;
     mass.resize(1);
     mass[0] = new_int;
 }
- 
+
 big_integer::big_integer(std::string const& line)
 {
     big_integer TEN(10);
@@ -46,15 +47,15 @@ big_integer::big_integer(std::string const& line)
     }
     this->sign = ( line[0] == '-' ) ? 1  :  0;
 }
- 
+
 big_integer::~big_integer() {}
- 
+
 int abs_compare(std::vector<unsigned> const& a, std::vector<unsigned> const& b)
 {
- 
+    
     if (a.size() != b.size())
     {
-       return (a.size() < b.size() ?  -1 : 1);
+        return (a.size() < b.size() ?  -1 : 1);
     }
     for (int i = (int) a.size() - 1; i >= 0; --i)
     {
@@ -65,9 +66,9 @@ int abs_compare(std::vector<unsigned> const& a, std::vector<unsigned> const& b)
     }
     return 0;
 }
- 
+
 int compare(big_integer const& a, big_integer const& b) {
- 
+    
     if (a.sign != b.sign)
     {
         if(a.mass.size()==1 && b.mass.size()==1 && a.mass.back()==0 && b.mass.back()==0 )
@@ -81,54 +82,54 @@ int compare(big_integer const& a, big_integer const& b) {
         return (abs_compare(a.mass, b.mass) * ( (a.sign==1) ? -1 : 1));
     }
 }
- 
+
 big_integer& big_integer::operator=(big_integer const& a)
 {
     this->mass = a.mass;
     this->sign = a.sign;
     return *this;
 }
- 
+
 bool operator==(big_integer const& a, big_integer const& b)
 {
     return compare(a,b) == 0;
 }
- 
+
 bool operator!=(big_integer const& a, big_integer const& b)
 {
     return compare(a,b) != 0;
 }
- 
+
 bool operator>(big_integer const& a, big_integer const& b)
 {
     return compare(a,b) == 1;
 }
- 
+
 bool operator<(big_integer const& a, big_integer const& b)
 {
     return compare(a,b) == -1;
 }
- 
+
 bool operator<=(big_integer const& a, big_integer const& b)
 {
     return compare(a,b) != 1;
 }
- 
+
 bool operator>=(big_integer const& a, big_integer const& b)
 {
     return compare(a,b) != -1;
 }
- 
+
 big_integer operator-(big_integer a, big_integer const& b)
 {
     return a -= b;
 }
- 
+
 big_integer operator+(big_integer a, big_integer const& b)
 {
     return a += b;
 }
- 
+
 void multiply(std::vector<unsigned> &res, const std::vector<unsigned> &a, uint64_t b)
 {
     res.resize(a.size());
@@ -144,7 +145,7 @@ void multiply(std::vector<unsigned> &res, const std::vector<unsigned> &a, uint64
         res.push_back(x);
     }
 }
- 
+
 unsigned int binary (const big_integer &dop, const big_integer &second) {
     unsigned long long l = 0;
     unsigned long long r = mod;
@@ -167,7 +168,7 @@ unsigned int binary (const big_integer &dop, const big_integer &second) {
     }
     return l;
 }
- 
+
 void div_long_short (big_integer &first, int second) {
     int carry = 0;
     for (int i = (int)first.mass.size() - 1; i >= 0; --i)
@@ -178,17 +179,17 @@ void div_long_short (big_integer &first, int second) {
     }
     my_resize(first);
 }
- 
+
 big_integer operator%(big_integer a, big_integer const& b)
 {
     return a %= b;
 }
- 
+
 big_integer& big_integer::operator+=(big_integer const& a)
 {
     return *this -= -a;
 }
- 
+
 big_integer& big_integer::operator-=(big_integer const &b)
 {
     size_t asize = mass.size();
@@ -198,7 +199,7 @@ big_integer& big_integer::operator-=(big_integer const &b)
     mass.resize(sz);
     if (sign != b.sign)
     {
- 
+        
         for (size_t cur = 0; cur < sz; cur++)
         {
             carry = carry + (cur < asize ? mass[cur] : 0) + (cur < bsize ? b.mass[cur] : 0);
@@ -213,7 +214,7 @@ big_integer& big_integer::operator-=(big_integer const &b)
     else
     {
         bool flag = (sign == 1) == (*this < b);
- 
+        
         for (size_t it = 0; it < sz; it++)
         {
             int64_t buf = (int64_t)mass[it] - (it < bsize ? b.mass[it] : 0);
@@ -235,7 +236,7 @@ big_integer& big_integer::operator-=(big_integer const &b)
     my_resize(*this);
     return *this;
 }
- 
+
 big_integer& big_integer::operator*=(big_integer const& b)
 {
     if (b.mass.size() == 1 || mass.size() == 1)
@@ -246,7 +247,7 @@ big_integer& big_integer::operator*=(big_integer const& b)
             q = mass.back();
             mass = b.mass;
         }
-        int64_t x = 0;
+        uint64_t x = 0;
         for (size_t i = 0; i < mass.size(); i++)
         {
             x += mass[i] * q;
@@ -260,11 +261,11 @@ big_integer& big_integer::operator*=(big_integer const& b)
     }
     else
     {
-        std::vector<int64_t> result(mass.size() + b.mass.size() + 1, 0);
+        std::vector<uint64_t> result(mass.size() + b.mass.size() + 1, 0);
         for (size_t i = 0; i < mass.size(); i++)
             for (size_t j = 0; j < b.mass.size(); j++)
             {
-                int64_t cur = result[i + j] + (int64_t)mass[i] * b.mass[j];
+                uint64_t cur = result[i + j] + (uint64_t)mass[i] * b.mass[j];
                 result[i + j] = cur % mod;
                 result[i + j + 1] += cur / mod;
             }
@@ -278,17 +279,17 @@ big_integer& big_integer::operator*=(big_integer const& b)
     sign ^= b.sign;
     my_resize(*this);
     return *this;
- 
+    
 }
- 
+
 big_integer operator*(big_integer a, big_integer const& b)
 {
     return a *= b;
 }
- 
+
 big_integer& big_integer::operator/=(big_integer const& b)
 {
- 
+    
     int this_sign = sign;
     sign = 0;
     if (abs_compare(mass, b.mass) < 0)
@@ -330,43 +331,43 @@ big_integer& big_integer::operator/=(big_integer const& b)
     my_resize(*this);
     return *this;
 }
- 
+
 big_integer operator/(big_integer a, big_integer const& b)
 {
     return a /= b;
 }
- 
+
 big_integer& big_integer::operator%=(big_integer const& b)
 {
     return *this = *this - (*this / b) * b;
 }
 big_integer& big_integer::operator--()
- 
+
 {
     *this -= 1;
     return *this;
 }
- 
+
 big_integer big_integer::operator--(int)
 {
     big_integer t = *this;
     --(*this);
     return t;
 }
- 
+
 big_integer& big_integer::operator++()
 {
     *this += 1;
     return *this;
 }
- 
+
 big_integer big_integer::operator++(int)
 {
     big_integer t = *this;
     ++(*this);
     return t;
 }
- 
+
 big_integer double_code(big_integer a)
 {
     if (a.sign == 0)
@@ -379,33 +380,33 @@ big_integer double_code(big_integer a)
     }
     return a;
 }
- 
+
 big_integer operator&(big_integer a, big_integer const& b)
 {
     return a &= b;
 }
- 
+
 big_integer operator|(big_integer a, big_integer const& b)
 {
     return a |= b;
 }
- 
+
 big_integer operator^(big_integer a, big_integer const& b)
 {
     return a ^= b;
 }
- 
+
 big_integer operator<<(big_integer a , int b)
 {
     return a <<= b;
 }
- 
+
 big_integer operator>>(big_integer a , int b)
 {
     return a >>= b;
 }
- 
- 
+
+
 big_integer& make_binary_op (big_integer &a, big_integer const &b, int operation)
 {
     big_integer  second = double_code(b);
@@ -436,7 +437,7 @@ big_integer& make_binary_op (big_integer &a, big_integer const &b, int operation
                 a.sign = a.sign | b.sign;
                 break;
         }
- 
+        
     }
     if (a.sign)
     {
@@ -446,27 +447,27 @@ big_integer& make_binary_op (big_integer &a, big_integer const &b, int operation
     my_resize(a);
     return a;
 }
- 
+
 big_integer& big_integer::operator&=(big_integer const& b)
 {
     return make_binary_op(*this, b, 1);
 }
- 
+
 big_integer& big_integer::operator^=(big_integer const& b)
 {
     return make_binary_op(*this, b, 2);
 }
- 
+
 big_integer& big_integer::operator|=(big_integer const& b)
 {
     return make_binary_op(*this, b, 3);
 }
- 
+
 big_integer& big_integer::operator<<=(int b)
 {
     if (b < 0) {
-       *this >>= (-b);
-       return *this;
+        *this >>= (-b);
+        return *this;
     }
     int count = b/32;
     int ost = b%32;
@@ -477,7 +478,7 @@ big_integer& big_integer::operator<<=(int b)
         {
             unsigned long long now = (unsigned long long) mass[i] << ost;
             mass[i] = (unsigned int) now % mod + last;
-             if (now >= mod)
+            if (now >= mod)
             {
                 now >>= 32;
                 last = now;
@@ -496,7 +497,7 @@ big_integer& big_integer::operator<<=(int b)
     mass.resize(k + count);
     for (int i = 0; i < (int) count; i++)
     {
-      mass[i + k] = mass[i];
+        mass[i + k] = mass[i];
     }
     for (int i = 0; i < count; i++) {
         mass[i]= 0;
@@ -507,7 +508,7 @@ big_integer& big_integer::operator<<=(int b)
     }
     return *this;
 }
- 
+
 big_integer& big_integer::operator>>=(int b)
 {
     if (b < 0)
@@ -529,10 +530,10 @@ big_integer& big_integer::operator>>=(int b)
         *this =  big_integer();
         return *this;
     } if ( count > 0)
-        {
+    {
         for (int i = count; i < (int) mass.size(); i++)
         {
- 
+            
             mass[i - count] = mass[i];
             mass[i] = 0;
         }
@@ -547,40 +548,40 @@ big_integer& big_integer::operator>>=(int b)
             mass[i] = f >> ost;
         }
         if (sign == 1 ){
-        mass[(int) mass.size() - count - 1] += (M - 1) * (1 << (32 - ost));
+            mass[(int) mass.size() - count - 1] += (M - 1) * (1 << (32 - ost));
         }
     }
     *this = sign == 1 ? double_code(*this + 1) :  *this;
     my_resize(*this);
     return *this;
 }
- 
+
 big_integer big_integer::operator+() const
 {
     return *this;
 }
- 
+
 big_integer big_integer::operator-() const
 {
     big_integer a(*this);
     a.sign ^= 1;
     return a;
 }
- 
+
 big_integer big_integer::operator~() const
 {
     big_integer a(*this + 1);
     a.sign ^= 1;
     return a;
 }
- 
+
 std::string to_string(big_integer const& a)
 {
-     big_integer aa = a, nul(0);
-     std::string s = "";
-     int module = 1000000;
-     while(aa != nul)
-     {
+    big_integer aa = a, nul(0);
+    std::string s = "";
+    int module = 1000000;
+    while(aa != nul)
+    {
         big_integer M = aa % module;
         int m = M.mass[0];
         std::string ss = "";
@@ -598,20 +599,20 @@ std::string to_string(big_integer const& a)
             }
         }
         s += ss;
-     }
-     reverse(s.begin(), s.end());
- 
-     if (a.sign == 1)
-     {
+    }
+    reverse(s.begin(), s.end());
+    
+    if (a.sign == 1)
+    {
         if (s.empty())
         {
             return "0";
         }
-            s = "-" + s;
-     }
-     return s.empty() ? "0" : s;
+        s = "-" + s;
+    }
+    return s.empty() ? "0" : s;
 }
- 
+
 std::istream& operator>>(std::istream& s, big_integer& a)
 {
     std::string str;
@@ -619,9 +620,26 @@ std::istream& operator>>(std::istream& s, big_integer& a)
     a = big_integer(str);
     return s;
 }
- 
+
 std::ostream& operator<<(std::ostream& s, big_integer const& a)
 {
     s << to_string(a);
     return s;
 }
+/*int main()
+{
+    big_integer a("20000000000000000000000000000000000000");
+    big_integer b (4);
+    std::cout<<a;
+    std::cout<<(a*b);
+    
+   
+
+    return 0;
+}
+
+
+*/
+
+
+
